@@ -9,8 +9,10 @@ import config
 class Payment(StatesGroup):
     waiting_for_phone_number = State()
 
+
 class Confirmations(StatesGroup):
     waiting_for_verifiable_users_phone_num = State()
+
 
 def free_account_search():
     for i in config.accounts:
@@ -25,7 +27,8 @@ async def verify_user(message: types.message, state: FSMContext, bot=Bot(token=c
     await state.update_data(user_phone_num=message.text)
     number = await state.get_data()
     try:
-        await bot.send_message(config.users_phone_numbers[number['user_phone_num']], 'Спасибо за ожидание.\nВаш перевод подтвержден!')
+        await bot.send_message(config.users_phone_numbers[number['user_phone_num']],
+                               'Спасибо за ожидание.\nВаш перевод подтвержден!')
         login, password = free_account_search()
         await bot.send_message(config.users_phone_numbers[number['user_phone_num']],
                                f'Высылаю ваш аккаунт ->\nlogin: {login}\npassword: {password}')
@@ -33,11 +36,16 @@ async def verify_user(message: types.message, state: FSMContext, bot=Bot(token=c
         config.users_phone_numbers.pop(number['user_phone_num'])
         await state.finish()
     except:
-        await bot.send_message(config.admin_id, 'Несуществующий номер')
+        await bot.send_message(config.__admin_id, 'Несуществующий номер')
 
 
 async def get_phone_number(message: types.Message, state: FSMContext, bot=Bot(token=config.__token)):
-    if len(message.text) != 11:
+    try:
+        print(int(message.text))
+    except:
+        await message.answer("Неверно введен номер телефона")
+        return
+    if len(message.text) != 11 or message.text[0] != '8':
         await message.answer("Неверно введен номер телефона")
         return
     await message.reply('Поддтверждение перевода займет пару минут')

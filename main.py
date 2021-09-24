@@ -11,6 +11,12 @@ from aiogram.dispatcher.filters import Text
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 
 
+def account_existence():
+    for i in config.accounts:
+        if config.accounts[i][0]:
+            return True
+
+
 async def main():
     logging.basicConfig(level=logging.INFO)
 
@@ -28,11 +34,11 @@ async def main():
         keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
         buttons = ["Правила пользования", "Получить аккаунт", "Поддержка"]
         keyboard.add(*buttons)
-        await message.answer(menu_texts.__greeting)
+        await message.answer(menu_texts.__greeting, reply_markup=keyboard)
 
     @dp.message_handler(Text(equals="Поддержка"))
     async def send_support_info(message: types.Message):
-        await message.reply('По любому вопросу, вы можете обратиться в нашу поддержку 🥰🥰:\n'
+        await message.amswer('По любому вопросу, вы можете обратиться в нашу поддержку 🥰🥰:\n'
                             'https://t.me/pulpich')
 
     @dp.message_handler(Text(equals="Получить аккаунт"))
@@ -43,10 +49,34 @@ async def main():
         await message.reply('Выберите звание', reply_markup=keyboard)
 
     @dp.message_handler(lambda message: message.text == "Global Elite")
-    async def from_who(message: types.Message):
-        await message.reply('Сообщите номер с которого будет производиться оплата (ввод без пробелов, только цифры)',
-                            reply_markup=types.ReplyKeyboardRemove())
+    async def possibility(message: types.Message):
+        if not account_existence():
+            await message.answer('В настоящий момент, к сожалению, нет свободных аккаунтов. Попробуйте позже.')
+            return
+        keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
+        buttons = ["Оплатить"]
+        keyboard.add(*buttons)
+        await message.answer(
+            '🔺 Стоимость одного аккаунта 100₽ \n\n'
+            '🔺 Размер залога - 500₽ (возврат залога происходит сразу же по истечению срока аренды)\n\n'
+            '🔺 Оплата производится переводом на Qiwi или Сбербанк',
+            reply_markup=keyboard
+        )
+
+    # выбор способа оплаты
+    @dp.message_handler(lambda message: message.text == 'Оплатить')
+    async def choose_payment_variant(message: types.Message):
+        keyboard = types.InlineKeyboardMarkup()
+        keyboard.add(types.InlineKeyboardButton(text='Qiwi', callback_data="Qiwi"),
+                     types.InlineKeyboardButton(text='Сбербанк', callback_data="sber"))
+        await message.answer("Выберете способ оплаты💳", reply_markup=keyboard)
+
+    @dp.callback_query_handler(text='sber')
+    async def from_who(call: types.CallbackQuery):
+        await call.message.answer('Сообщите номер с которого будет производиться оплата (ввод без пробелов, только цифры)',
+                                  reply_markup=types.ReplyKeyboardRemove())
         await Payment.waiting_for_phone_number.set()
+
 
     @dp.message_handler(Text(equals="Правила пользования"))
     async def send_rules(message: types.Message):
