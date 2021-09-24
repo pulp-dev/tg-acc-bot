@@ -1,7 +1,7 @@
 import asyncio
 
 import config
-import ruels_text
+import menu_texts
 import get_phone_number_script
 from get_phone_number_script import Payment, Confirmations
 import logging
@@ -28,7 +28,7 @@ async def main():
         keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
         buttons = ["Правила пользования", "Получить аккаунт", "Поддержка"]
         keyboard.add(*buttons)
-        await message.answer("Приветствую тебя.", reply_markup=keyboard)
+        await message.answer(menu_texts.__greeting)
 
     @dp.message_handler(Text(equals="Поддержка"))
     async def send_support_info(message: types.Message):
@@ -50,7 +50,7 @@ async def main():
 
     @dp.message_handler(Text(equals="Правила пользования"))
     async def send_rules(message: types.Message):
-        await message.answer(ruels_text.rules, parse_mode=types.ParseMode.HTML)
+        await message.answer(menu_texts.__rules, parse_mode=types.ParseMode.HTML)
 
     await dp.skip_updates()
     await dp.start_polling()
