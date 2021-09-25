@@ -1,5 +1,6 @@
 import asyncio
 
+import admin_operations
 import config
 import menu_texts
 import get_phone_number_script
@@ -24,9 +25,14 @@ async def main():
     dp = Dispatcher(bot, storage=MemoryStorage())
 
     get_phone_number_script.reg_handlers(dp)
+    admin_operations.reg_admin_handlers(dp)
 
-    @dp.message_handler(commands=["start", "confirm"])
+    @dp.message_handler(commands=["start", "confirm", "add_account"])
     async def cmd_start(message: types.Message):
+        if message.text == '/add_account' and message.chat.id == config.__admin_id:
+            admin = admin_operations.Admin(config.__admin_id, bot)
+            await admin.add_account_com()
+            return
         if message.text == '/confirm' and message.chat.id == config.__admin_id:
             await message.answer('Телефон пользователя')
             await Confirmations.waiting_for_verifiable_users_phone_num.set()
@@ -38,8 +44,8 @@ async def main():
 
     @dp.message_handler(Text(equals="Поддержка"))
     async def send_support_info(message: types.Message):
-        await message.amswer('По любому вопросу, вы можете обратиться в нашу поддержку 🥰🥰:\n'
-                            'https://t.me/pulpich')
+        await message.answer('По любому вопросу, вы можете обратиться в нашу поддержку 🥰🥰:\n'
+                             'https://t.me/pulpich')
 
     @dp.message_handler(Text(equals="Получить аккаунт"))
     async def reply_for_ask(message: types.Message):
@@ -73,10 +79,10 @@ async def main():
 
     @dp.callback_query_handler(text='sber')
     async def from_who(call: types.CallbackQuery):
-        await call.message.answer('Сообщите номер с которого будет производиться оплата (ввод без пробелов, только цифры)',
+        await call.message.answer('Сообщите номер с которого будет производиться оплата (ввод без пробелов, '
+                                  'только цифры)',
                                   reply_markup=types.ReplyKeyboardRemove())
         await Payment.waiting_for_phone_number.set()
-
 
     @dp.message_handler(Text(equals="Правила пользования"))
     async def send_rules(message: types.Message):

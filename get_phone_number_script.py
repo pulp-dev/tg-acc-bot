@@ -4,6 +4,7 @@ from aiogram.dispatcher.filters import Text
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 import config
+import json
 
 
 class Payment(StatesGroup):
@@ -20,6 +21,10 @@ def free_account_search():
             login = i
             password = config.accounts[i][1]
             config.accounts[i][0] = False
+
+            with open('accounts.json', 'w') as file:
+                json.dump(config.accounts, file)
+
             return login, password
 
 
