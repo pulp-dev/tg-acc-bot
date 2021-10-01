@@ -3,6 +3,7 @@ from aiogram import Bot, Dispatcher, executor, types
 from aiogram.dispatcher import FSMContext
 
 import config
+from get_phone_number_script import Confirmations
 
 bot = Bot(token=config.__token)
 
@@ -30,6 +31,11 @@ async def add_account(message: types.message, state: FSMContext):
     config.accounts[login] = [True, password]
     await bot.send_message(config.__admin_id, f"Создан новый аккаунт: {login}: {password}")
     await state.finish()
+
+
+async def cmd_confirm(message: types.message):
+    await message.answer('Телефон пользователя')
+    await Confirmations.waiting_for_verifiable_users_phone_num.set()
 
 
 def reg_admin_handlers(dp: Dispatcher):
